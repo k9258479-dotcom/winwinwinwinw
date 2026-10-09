@@ -79,32 +79,18 @@ export const CashierModal: React.FC<CashierModalProps> = ({
       if (data && data.success && data.checkoutUrl) {
         setPaymongoCheckoutUrl(data.checkoutUrl);
         sounds.playCashout();
-        // Diretso agad sa PayMongo Checkout page
-        window.location.href = data.checkoutUrl;
-        return;
-      } else if (!data) {
-        // Fallback to local checkout simulation
-        const refNo = `PM-${Math.floor(10000000 + Math.random() * 90000000)}`;
-        const txId = `tx_pm_${Date.now()}`;
-        const simUrl = `/paymongo-checkout.html?amount=${depositAmount}&phone=${depositPhone}&ref=${refNo}&tx=${txId}`;
-        setPaymongoCheckoutUrl(simUrl);
-        sounds.playCashout();
-        window.location.href = simUrl;
+        // Buksan sa bagong window/tab para hindi i-block ng iframe frame-ancestors security policy ng PayMongo
+        try {
+          window.open(data.checkoutUrl, '_blank', 'noopener,noreferrer');
+        } catch {}
         return;
       } else {
-        setErrorMsg(data.message || 'Hindi ma-load ang Payment checkout. Pakisubukang muli.');
+        setErrorMsg(data?.message || 'Hindi ma-load ang PayMongo checkout session. Pakisubukang muli o i-check ang Secret Key sa Admin.');
         return;
       }
-    } catch (err) {
+    } catch (err: any) {
       setIsLoading(false);
-      const refNo = `PM-${Math.floor(10000000 + Math.random() * 90000000)}`;
-      const txId = `tx_pm_${Date.now()}`;
-      const simUrl = `/paymongo-checkout.html?amount=${depositAmount}&phone=${depositPhone}&ref=${refNo}&tx=${txId}`;
-      setPaymongoCheckoutUrl(simUrl);
-      sounds.playCashout();
-      try {
-        window.open(simUrl, '_blank');
-      } catch {}
+      setErrorMsg(`Hindi makakonekta sa PayMongo gateway: ${err.message || 'Network error'}. Pakisubukang muli.`);
       return;
     }
   };
@@ -225,21 +211,26 @@ export const CashierModal: React.FC<CashierModalProps> = ({
             <div>
               {paymongoCheckoutUrl ? (
                 <div className="text-center py-6 space-y-4 bg-slate-950/80 border border-purple-500/40 rounded-2xl p-6">
-                  <div className="w-14 h-14 bg-purple-500/20 text-purple-400 rounded-full flex items-center justify-center mx-auto text-2xl font-black shadow-lg shadow-purple-500/20">
-                    ⚡
+                  <div className="w-16 h-16 bg-purple-500/20 text-purple-400 rounded-full flex items-center justify-center mx-auto text-3xl font-black shadow-lg shadow-purple-500/30">
+                    💳
                   </div>
-                  <h3 className="text-lg font-bold text-white">Payment Gateway Ready!</h3>
-                  <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                    Handa na ang iyong deposit na ₱{depositAmount.toLocaleString()}. Pindutin ang button sa ibaba upang buksan ang secure payment portal.
+                  <div>
+                    <h3 className="text-lg font-black text-white">Payment Checkout Ready!</h3>
+                    <p className="text-xs text-slate-300 mt-1">
+                      Halaga: <strong className="text-emerald-400 font-mono text-sm">₱{depositAmount.toLocaleString()}</strong>
+                    </p>
+                  </div>
+                  <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
+                    Pindutin ang button sa ibaba upang buksan ang opisyal na PayMongo portal sa bagong tab para sa GCash, Maya, QR Ph, at Card.
                   </p>
                   <div className="flex flex-col gap-2.5 max-w-sm mx-auto pt-2">
                     <a
                       href={paymongoCheckoutUrl}
                       target="_blank"
-                      rel="noreferrer"
-                      className="w-full py-3.5 bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 text-white font-black text-xs uppercase tracking-wider rounded-xl hover:brightness-110 active:scale-95 shadow-lg shadow-purple-500/30 flex items-center justify-center gap-2"
+                      rel="noopener noreferrer"
+                      className="w-full py-4 bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 text-white font-black text-sm uppercase tracking-wider rounded-xl hover:brightness-110 active:scale-95 shadow-xl shadow-purple-600/40 flex items-center justify-center gap-2"
                     >
-                      <span>Magbayad Ngayon (Proceed to Payment) →</span>
+                      <span>Buksan ang PayMongo Checkout ↗</span>
                     </a>
                     <button
                       type="button"

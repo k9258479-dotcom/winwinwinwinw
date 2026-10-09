@@ -13,6 +13,8 @@ export default async function handler(req: any, res: any) {
   const refNo = `PM-${Math.floor(10000000 + Math.random() * 90000000)}`;
   const txId = `tx_pm_${Date.now()}`;
   let liveSecretKey = process.env.PAYMONGO_SECRET_KEY || '';
+
+  // 1. Check local files
   if (!liveSecretKey) {
     try {
       const fs = await import('fs');
@@ -31,6 +33,36 @@ export default async function handler(req: any, res: any) {
         }
       }
     } catch {}
+  }
+
+  // 2. Check Firestore
+  if (!liveSecretKey) {
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      const fbConfigFile = path.join(process.cwd(), 'firebase-applet-config.json');
+      if (fs.existsSync(fbConfigFile)) {
+        const fbConfig = JSON.parse(fs.readFileSync(fbConfigFile, 'utf-8'));
+        const { initializeApp, getApps } = await import('firebase/app');
+        const { getFirestore, doc, getDoc } = await import('firebase/firestore');
+        const app = getApps().length > 0 ? getApps()[0] : initializeApp(fbConfig);
+        const db = getFirestore(app, fbConfig.firestoreDatabaseId || undefined);
+        const snap = await getDoc(doc(db, 'settings', 'paymongo_config'));
+        if (snap.exists()) {
+          const data: any = snap.data();
+          if (data?.secretKey) {
+            liveSecretKey = data.secretKey;
+          }
+        }
+      }
+    } catch {}
+  }
+
+  if (!liveSecretKey) {
+    return res.status(400).json({
+      success: false,
+      message: 'Walang naka-set na PayMongo Secret Key sa backend. Mangyaring ilagay ang inyong Secret Key (sk_live_...) sa Admin Settings (PayMongo Gateway).'
+    });
   }
 
   try {
@@ -76,16 +108,16 @@ export default async function handler(req: any, res: any) {
         transactionId: txId,
       });
     }
-  } catch (err) {
-    console.warn('Live PayMongo API checkout session error:', err);
-  }
 
-  // Resilient fallback checkout page
-  const simCheckoutUrl = `/paymongo-checkout.html?amount=${numAmount}&phone=${cleanPhone}&ref=${refNo}&tx=${txId}`;
-  return res.json({
-    success: true,
-    checkoutUrl: simCheckoutUrl,
-    referenceNo: refNo,
-    transactionId: txId,
-  });
+    const detail = pmData.errors?.[0]?.detail || pmData.message || (pmRes.status === 401 ? 'Maling Secret Key sa PayMongo' : `Error code HTTP ${pmRes.status}`);
+    return res.status(400).json({
+      success: false,
+      message: `PayMongo API Error: ${detail}`
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      message: `Hindi makakonekta sa PayMongo: ${err.message}`
+    });
+  }
 }

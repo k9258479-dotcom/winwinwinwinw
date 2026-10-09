@@ -1810,94 +1810,86 @@ app.post('/api/paymongo/create-checkout', async (req, res) => {
 
   await ensurePayMongoConfig();
 
-  // If real PayMongo keys configured
-  if (paymongoConfig.isEnabled && paymongoConfig.secretKey) {
-    try {
-      const authHeader = 'Basic ' + Buffer.from(paymongoConfig.secretKey + ':').toString('base64');
-      const amountInCentavos = Math.round(numAmount * 100);
-
-      const pmRes = await fetch('https://api.paymongo.com/v1/checkout_sessions', {
-        method: 'POST',
-        headers: {
-          'Authorization': authHeader,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-          data: {
-            attributes: {
-              send_email_receipt: false,
-              show_description: true,
-              show_line_items: true,
-              payment_method_types: ['gcash', 'paymaya', 'card', 'qrph', 'grab_pay', 'dob', 'billease'],
-              line_items: [
-                {
-                  currency: 'PHP',
-                  amount: amountInCentavos,
-                  description: description || 'Bet88 Casino Wallet Deposit',
-                  name: 'Bet88 Credits',
-                  quantity: 1,
-                },
-              ],
-              description: `Bet88 Wallet Credit for ${cleanPhone} (Ref: ${refNo})`,
-              reference_number: refNo,
-            },
-          },
-        }),
-      });
-
-      const pmData: any = await pmRes.json();
-      if (pmRes.ok && pmData.data && pmData.data.attributes && pmData.data.attributes.checkout_url) {
-        const checkoutUrl = pmData.data.attributes.checkout_url;
-
-        const newTx: Transaction = {
-          id: txId,
-          userId: cleanPhone,
-          userPhone: cleanPhone,
-          type: 'DEPOSIT',
-          amount: numAmount,
-          status: 'PENDING',
-          method: 'Payment',
-          referenceNo: refNo,
-          timestamp: new Date().toLocaleTimeString(),
-        };
-        transactions.unshift(newTx);
-        saveTransactionsToFile();
-
-        return res.json({
-          success: true,
-          checkoutUrl,
-          referenceNo: refNo,
-          transactionId: txId,
-        });
-      }
-    } catch (e: any) {
-      console.warn('PayMongo API call error:', e.message);
-    }
+  // Check if PayMongo keys are configured
+  if (!paymongoConfig.secretKey) {
+    return res.status(400).json({
+      success: false,
+      message: 'Walang naka-set na PayMongo Secret Key sa backend. Mangyaring ilagay ang inyong Secret Key sa Admin Dashboard (Payment Settings).'
+    });
   }
 
-  // Instant simulation checkout URL if keys pending setup
-  const simCheckoutUrl = `/paymongo-checkout.html?amount=${numAmount}&phone=${cleanPhone}&ref=${refNo}&tx=${txId}`;
-  const newTx: Transaction = {
-    id: txId,
-    userId: cleanPhone,
-    userPhone: cleanPhone,
-    type: 'DEPOSIT',
-    amount: numAmount,
-    status: 'PENDING',
-    method: 'Payment',
-    referenceNo: refNo,
-    timestamp: new Date().toLocaleTimeString(),
-  };
-  transactions.unshift(newTx);
-  saveTransactionsToFile();
+  try {
+    const authHeader = 'Basic ' + Buffer.from(paymongoConfig.secretKey + ':').toString('base64');
+    const amountInCentavos = Math.round(numAmount * 100);
 
-  res.json({
-    success: true,
-    checkoutUrl: simCheckoutUrl,
-    referenceNo: refNo,
-    transactionId: txId,
-  });
+    const pmRes = await fetch('https://api.paymongo.com/v1/checkout_sessions', {
+      method: 'POST',
+      headers: {
+        'Authorization': authHeader,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        data: {
+          attributes: {
+            send_email_receipt: false,
+            show_description: true,
+            show_line_items: true,
+            payment_method_types: ['gcash', 'paymaya', 'card', 'qrph', 'grab_pay', 'dob', 'billease'],
+            line_items: [
+              {
+                currency: 'PHP',
+                amount: amountInCentavos,
+                description: description || 'Bet88 Casino Wallet Deposit',
+                name: 'Bet88 Credits',
+                quantity: 1,
+              },
+            ],
+            description: `Bet88 Wallet Credit for ${cleanPhone} (Ref: ${refNo})`,
+            reference_number: refNo,
+          },
+        },
+      }),
+    });
+
+    const pmData: any = await pmRes.json().catch(() => ({}));
+    if (pmRes.ok && pmData.data && pmData.data.attributes && pmData.data.attributes.checkout_url) {
+      const checkoutUrl = pmData.data.attributes.checkout_url;
+
+      const newTx: Transaction = {
+        id: txId,
+        userId: cleanPhone,
+        userPhone: cleanPhone,
+        type: 'DEPOSIT',
+        amount: numAmount,
+        status: 'PENDING',
+        method: 'Payment',
+        referenceNo: refNo,
+        timestamp: new Date().toLocaleTimeString(),
+      };
+      transactions.unshift(newTx);
+      saveTransactionsToFile();
+
+      return res.json({
+        success: true,
+        checkoutUrl,
+        referenceNo: refNo,
+        transactionId: txId,
+      });
+    }
+
+    const detail = pmData.errors?.[0]?.detail || pmData.message || (pmRes.status === 401 ? 'Maling Secret Key' : `Error code HTTP ${pmRes.status}`);
+    return res.status(400).json({
+      success: false,
+      message: `PayMongo API Error: ${detail}`
+    });
+  } catch (e: any) {
+    console.warn('PayMongo API call error:', e.message);
+    return res.status(500).json({
+      success: false,
+      message: `Hindi makakonekta sa PayMongo API: ${e.message}`
+    });
+  }
 });
 
 // PayMongo Webhook Handler
