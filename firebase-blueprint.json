@@ -1,0 +1,105 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile with balance, VIP status, and credentials",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique user phone identifier", "maxLength": 64 },
+        "phone": { "type": "string", "description": "User mobile number", "maxLength": 32 },
+        "username": { "type": "string", "description": "Display username", "maxLength": 64 },
+        "playerId": { "type": "string", "description": "Formatted player ID", "maxLength": 64 },
+        "balance": { "type": "number", "description": "Wallet balance in PHP" },
+        "vipLevel": { "type": "number", "description": "Current VIP tier" },
+        "vipPoints": { "type": "number", "description": "VIP loyalty points accumulated" },
+        "totalDeposited": { "type": "number", "description": "Total lifetime deposit amount" },
+        "totalWithdrawn": { "type": "number", "description": "Total lifetime withdrawal amount" },
+        "avatar": { "type": "string", "description": "Avatar emoji or URL", "maxLength": 128 },
+        "password": { "type": "string", "description": "User password hash or credential", "maxLength": 128 },
+        "registeredAt": { "type": "string", "description": "Registration date string", "maxLength": 64 }
+      },
+      "required": ["id", "phone", "balance"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Deposit, withdrawal, or bonus transaction",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique transaction ID", "maxLength": 128 },
+        "userId": { "type": "string", "description": "Owner user phone", "maxLength": 64 },
+        "userPhone": { "type": "string", "description": "User mobile phone", "maxLength": 32 },
+        "type": { "type": "string", "description": "DEPOSIT, WITHDRAWAL, or BONUS", "maxLength": 32 },
+        "amount": { "type": "number", "description": "Transaction amount in PHP" },
+        "method": { "type": "string", "description": "Payment method used (e.g. GCash)", "maxLength": 64 },
+        "status": { "type": "string", "description": "PENDING, APPROVED, or REJECTED", "maxLength": 32 },
+        "accountNumber": { "type": "string", "description": "Payment recipient account number", "maxLength": 64 },
+        "accountName": { "type": "string", "description": "Account holder name", "maxLength": 128 },
+        "referenceNumber": { "type": "string", "description": "Receipt reference", "maxLength": 128 },
+        "createdAt": { "type": "string", "description": "Creation timestamp", "maxLength": 64 }
+      },
+      "required": ["id", "userId", "type", "amount", "status"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Live support chat message",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique message ID", "maxLength": 128 },
+        "sessionId": { "type": "string", "description": "Chat session ID or phone", "maxLength": 64 },
+        "phone": { "type": "string", "description": "User phone number", "maxLength": 32 },
+        "sender": { "type": "string", "description": "user or csr", "maxLength": 32 },
+        "senderName": { "type": "string", "description": "Sender display name", "maxLength": 64 },
+        "text": { "type": "string", "description": "Message text", "maxLength": 2048 },
+        "time": { "type": "string", "description": "Message time", "maxLength": 32 },
+        "timestamp": { "type": "number", "description": "Message timestamp epoch ms" },
+        "createdAt": { "type": "string", "description": "ISO timestamp", "maxLength": 64 }
+      },
+      "required": ["id", "sessionId", "sender", "text"]
+    },
+    "ChatSession": {
+      "title": "ChatSession",
+      "description": "Support chat session summary",
+      "type": "object",
+      "properties": {
+        "sessionId": { "type": "string", "description": "Unique session ID", "maxLength": 64 },
+        "phone": { "type": "string", "description": "User phone", "maxLength": 32 },
+        "playerName": { "type": "string", "description": "Player name", "maxLength": 64 },
+        "lastMessage": { "type": "string", "description": "Last message preview", "maxLength": 2048 },
+        "lastTime": { "type": "string", "description": "Last message time string", "maxLength": 32 },
+        "timestamp": { "type": "number", "description": "Last activity timestamp", "maxLength": 64 },
+        "updatedAt": { "type": "string", "description": "ISO timestamp", "maxLength": 64 }
+      },
+      "required": ["sessionId"]
+    },
+    "GameWinRates": {
+      "title": "GameWinRates",
+      "description": "Configured RTP and game parameters",
+      "type": "object",
+      "properties": {
+        "rates": { "type": "string", "description": "JSON string or nested win rate configs" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profiles keyed by user phone"
+    },
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Transaction logs and pending deposits/withdrawals"
+    },
+    "/csr_messages/{messageId}": {
+      "schema": "ChatMessage",
+      "description": "Live support chat messages"
+    },
+    "/csr_sessions/{sessionId}": {
+      "schema": "ChatSession",
+      "description": "Active live support sessions"
+    },
+    "/settings/{settingId}": {
+      "schema": "GameWinRates",
+      "description": "Global casino game settings and RTP configurations"
+    }
+  }
+}

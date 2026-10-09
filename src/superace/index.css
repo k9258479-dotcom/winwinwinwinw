@@ -1,0 +1,146 @@
+@import "tailwindcss";
+
+@layer utilities {
+  .font-game-title {
+    font-family: 'Anton', sans-serif;
+    letter-spacing: 0.5px;
+  }
+  .font-numbers {
+    font-family: 'Teko', sans-serif;
+    letter-spacing: 0.5px;
+  }
+  .font-ui {
+    font-family: 'Montserrat', sans-serif;
+  }
+}
+
+/* Metallic Text Gradients */
+.text-gold-metallic {
+  background: linear-gradient(180deg, #fff7c2 0%, #ffc600 45%, #e68a00 55%, #fff1a8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.9));
+}
+
+.text-silver-metallic {
+  background: linear-gradient(180deg, #ffffff 0%, #e2e8f0 45%, #94a3b8 55%, #f8fafc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.9));
+}
+
+/* Playing Cards Styling */
+.card-face {
+  background: linear-gradient(180deg, #ffffff 0%, #f4f5f8 85%, #cfd7df 100%);
+  box-shadow: inset 0 1px 1px #fff, 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.golden-card-face {
+  background: linear-gradient(180deg, #fffbe6 0%, #ffd866 50%, #e6a71e 100%);
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.7), inset 0 0 8px #ffffff;
+  border-color: #ffd700 !important;
+}
+
+.wild-card-face {
+  background: linear-gradient(180deg, #fff4cc 0%, #ffaa00 40%, #d83a12 100%);
+  box-shadow: 0 0 14px rgba(255, 120, 0, 0.8), inset 0 0 6px #fff;
+  border-color: #ff9800 !important;
+}
+
+.scatter-card-face {
+  background: linear-gradient(180deg, #ffeef8 0%, #9c27b0 50%, #4a148c 100%);
+  box-shadow: 0 0 14px rgba(233, 30, 99, 0.8), inset 0 0 6px #fff;
+  border-color: #e91e63 !important;
+}
+
+/* Custom glow shadows */
+.shadow-gold-glow {
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.7), inset 0 0 8px rgba(255, 255, 255, 0.6);
+}
+.shadow-neon-blue {
+  box-shadow: 0 0 10px #00d2ff, inset 0 0 4px #00d2ff;
+}
+.shadow-neon-green {
+  box-shadow: 0 0 10px #00ff66, inset 0 0 4px #00ff66;
+}
+.shadow-neon-purple {
+  box-shadow: 0 0 12px #ff00ff, 0 0 5px #ffffff;
+}
+
+/* Smooth keyframes */
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 1.8s infinite ease-in-out;
+}
+
+@keyframes winPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+.animate-win-pop {
+  animation: winPop 0.4s ease-in-out;
+}
+
+/* Scroll down animation (nag scroldown pababa) */
+@keyframes reelScrollDown {
+  0% {
+    transform: translateY(-50%);
+  }
+  100% {
+    transform: translateY(0%);
+  }
+}
+
+.animate-reel-scroll-down {
+  animation: reelScrollDown 0.22s linear infinite;
+  will-change: transform;
+}
+
+.animate-reel-scroll-down-turbo {
+  animation: reelScrollDown 0.12s linear infinite;
+  will-change: transform;
+}
+
+@keyframes reelBounceStop {
+  0% {
+    transform: translateY(-36px);
+  }
+  65% {
+    transform: translateY(8px);
+  }
+  85% {
+    transform: translateY(-3px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.animate-reel-bounce {
+  animation: reelBounceStop 0.35s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+}
+
+@keyframes dropDownCard {
+  0% {
+    transform: translateY(-70%);
+    opacity: 0.4;
+  }
+  70% {
+    transform: translateY(4px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-card-fall {
+  animation: dropDownCard 0.28s ease-out forwards;
+}

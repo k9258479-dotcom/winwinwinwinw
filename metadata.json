@@ -1,0 +1,6 @@
+{
+  "name": "Bet88 Gaming Platform - Online Casino & Arcade",
+  "description": "Premium Philippine online gaming platform featuring slots, live casino, crash games, diamond mines, perya color game, and GCash/Maya cashier simulation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
